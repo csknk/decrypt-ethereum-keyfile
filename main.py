@@ -23,13 +23,12 @@ def main(filename):
     if (verify(k, data)):
         print("Password verified.")
         
-        #print("iv_int: {}".format(data["cipherparams"]["iv"]))
         iv_int = int(data["cipherparams"]["iv"], 16)
         ctr = Counter.new(AES.block_size * 8, initial_value=iv_int)
         # Note first 16 bytes of the derived key
         dec_suite = AES.new(k[:16], AES.MODE_CTR, counter=ctr)
         decrypted_private_key = dec_suite.decrypt(bytes.fromhex(data["ciphertext"]))
-        print(decrypted_private_key)
+        print(decrypted_private_key.hex())
 
     else:
         print("Password NOT verified.")
