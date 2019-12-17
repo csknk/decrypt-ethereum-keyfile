@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#import hashlib
 import sha3
 
 def verify(key, data):

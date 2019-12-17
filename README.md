@@ -40,9 +40,39 @@ Encryption Scheme
 -----------------
 The keyfile holds the encrypted private key in the `crypto.ciphertext` field.
 
-The encryption scheme is an AES-128-CTR cipher, using scrypt as a key derivation function and message authentication code (MAC) to authenticate the password.
+The encryption scheme is an AES-128-CTR cipher, using scrypt as a key derivation function (to derive a block cipher key from a text-based password) and message authentication code (MAC) to authenticate the password.
 
 The private key is symmetrically encrypted using AES-128 with block cipher mode CTR. In this case, the [scrypt][6] key derivation function is used to generate an AES symmetric key from the original password. An initialization vector is also required for decryption - and this is held in the `crypto.cipherparams.iv` field.
+
+Relevant fields are:
+
+* `crypto.cipher`: Denotes the cryptographic block-cipher algorithm, key size in bits and block cipher mode of operation.
+* `crypto.ciphertext`: The encrypted private key.
+* `crypto.cipherparams.iv`: The initialization vector required for AES in counter (CTR) mode.
+* `crypto.kdf`: Denotes the key derivation function used - in this case, `srypt`.
+* `crypto.kdfparams`: These variables are used in the kdf function - see [decrypt_key.py][8], [scrypt wikipedia][6]
+* `crypto.mac`: Message authentication code - used to check the authenticity of the key derived from the user-supplied password.
+
+Key Derivation
+--------------
+Requires the user-supplied password and the `crypto.kdfparams`.
+
+From [derive_key.py][8]
+```py
+import hashlib
+
+def key(password, data):
+    key = hashlib.scrypt(
+        bytes(password, 'utf-8'),
+        salt=bytes.fromhex(data["kdfparams"]["salt"]),
+        n=data["kdfparams"]["n"],
+        r=data["kdfparams"]["r"],
+        p=data["kdfparams"]["p"],
+        maxmem=2000000000,
+        dklen=data["kdfparams"]["dklen"]
+        )
+    return key  
+```
 
 Message Authentication
 ----------------------
@@ -56,7 +86,6 @@ Once the decryption key is derived from the password, it is authenticated by:
 From [password_verify.py][7]:
 
 ```py
-#!/usr/bin/env python3
 import sha3
 
 def verify(key, data):
@@ -70,6 +99,7 @@ def verify(key, data):
 ```
 
 
+
 Generate a Private Key and Keyfile for Testing
 ----------------------------------------------
 The sample keyfile is generated from a private key 1 encrypted with the password "a":
@@ -79,7 +109,6 @@ The sample keyfile is generated from a private key 1 encrypted with the password
 cd $(mkdir -d)
 
 # Make a key
-#echo "0000000000000000000000000000000000000000000000000000000000000001" > plain_key.txt
 head -c 32 /dev/random | xxd -ps -c 32 > plain_key.txt
 
 geth --datadir . account import plain_key.txt
@@ -121,3 +150,4 @@ References
 [5]: https://github.com/ethereum/go-ethereum
 [6]: https://en.wikipedia.org/wiki/Scrypt
 [7]: /password_verify.py
+[8]: /derive_key.py

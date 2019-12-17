@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import sys
 import hashlib
-import sha3
 
 def key(password, data):
     key = hashlib.scrypt(

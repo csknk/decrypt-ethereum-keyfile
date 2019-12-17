@@ -3,7 +3,7 @@
 import sys, json
 from getpass import getpass
 from password_verify import verify
-from decrypt_key import key
+from derive_key import key
 
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
