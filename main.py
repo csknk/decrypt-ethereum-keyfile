@@ -4,7 +4,6 @@ import sys, json
 from getpass import getpass
 from password_verify import verify
 from derive_key import key
-
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
@@ -22,10 +21,8 @@ def main(filename):
     print("key: {}".format(key))
     if (verify(k, data)):
         print("Password verified.")
-        
         iv_int = int(data["cipherparams"]["iv"], 16)
         ctr = Counter.new(AES.block_size * 8, initial_value=iv_int)
-        # Note first 16 bytes of the derived key
         dec_suite = AES.new(k[:16], AES.MODE_CTR, counter=ctr)
         decrypted_private_key = dec_suite.decrypt(bytes.fromhex(data["ciphertext"]))
         print(decrypted_private_key.hex())
